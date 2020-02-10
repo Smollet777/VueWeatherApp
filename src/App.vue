@@ -9,7 +9,7 @@
           type="text"
           class="search-bar"
           placeholder="Search for city..."
-          v-model="query"
+          v-model.trim="query"
           v-on:keypress="fetchWeather"
         />
       </div>
@@ -42,7 +42,7 @@ export default {
     fetchWeather(e) {
       if (e.key === "Enter") {
         fetch(
-          `${this.url_base}weather?q=${this.query.trim()}&units=metric&APPID=${
+          `${this.url_base}weather?q=${this.query}&units=metric&APPID=${
             this.api_key
           }`
         )
