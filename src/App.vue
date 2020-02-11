@@ -10,9 +10,12 @@
           class="search-bar"
           placeholder="Search for city..."
           v-model.trim="query"
-          v-on:keypress="fetchWeather"
+          v-on:keypress="fetchByCityName"
         />
       </div>
+      <template v-if="noLocation">
+        <h3>Enable geolocation to fetch data automatically</h3>
+      </template>
       <div class="weather-wrap" v-if="typeof weather.main !== 'undefined'">
         <div class="location-box">
           <div class="location">{{weather.name}}, {{weather.sys.country}}</div>
@@ -32,22 +35,44 @@ export default {
   name: "app",
   data() {
     return {
+      noLocation: true,
       api_key: "7581af8da7499cff0f7014b04ceb3cab",
       url_base: "https://api.openweathermap.org/data/2.5/",
       query: "",
-      weather: {}
+      weather: {},
+      fetches: {
+        cityname: query =>
+          fetch(
+            `${this.url_base}weather?q=${query}&units=metric&APPID=${this.api_key}`
+          ),
+        coordinates: ({ lat, lng }) =>
+          fetch(
+            `${this.url_base}weather?lat=${lat}&lon=${lng}&units=metric&APPID=${this.api_key}`
+          )
+      }
     };
   },
+  beforeMount() {
+    this.fetchByCoordinates();
+  },
   methods: {
-    fetchWeather(e) {
-      if (e.key === "Enter") {
-        fetch(
-          `${this.url_base}weather?q=${this.query}&units=metric&APPID=${
-            this.api_key
-          }`
-        )
-          .then(res => res.json())
-          .then(this.setResults);
+    fetchWeather(method, ...args) {
+      this.fetches[method](...args)
+        .then(res => res.json())
+        .then(this.setResults);
+    },
+    fetchByCityName(e) {
+      if (e.key === "Enter" && this.query) {
+        this.fetchWeather("cityname", this.query);
+      }
+    },
+    async fetchByCoordinates() {
+      try {
+        const { lat, lng } = await this.$getLocation();
+        this.noLocation = false;
+        this.fetchWeather("coordinates", { lat, lng });
+      } catch (error) {
+        this.noLocation = true;
       }
     },
     setResults(results) {
@@ -83,6 +108,8 @@ body {
 }
 
 main {
+  color: rgba(255, 255, 255, 1);
+  text-align: center;
   min-height: 100vh;
   padding: 1.5rem;
   background-image: linear-gradient(
@@ -121,11 +148,6 @@ main {
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.25);
 }
 
-.location-box,
-.weather-box {
-  color: rgba(255, 255, 255, 1);
-  text-align: center;
-}
 .location-box .location {
   font-size: 2rem;
   font-weight: 500;
