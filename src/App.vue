@@ -10,7 +10,7 @@
           class="search-bar"
           placeholder="Search for city..."
           v-model.trim="query"
-          v-on:keypress="fetchByCityName"
+          v-on:keypress.enter="fetchByCityName"
         />
       </div>
       <template v-if="noLocation">
@@ -61,10 +61,8 @@ export default {
         .then(res => res.json())
         .then(this.setResults);
     },
-    fetchByCityName(e) {
-      if (e.key === "Enter" && this.query) {
+    fetchByCityName() {
         this.fetchWeather("cityname", this.query);
-      }
     },
     async fetchByCoordinates() {
       try {
