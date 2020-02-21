@@ -19,7 +19,7 @@
       <div class="weather-wrap" v-if="typeof weather.main !== 'undefined'">
         <div class="location-box">
           <div class="location">{{weather.name}}, {{weather.sys.country}}</div>
-          <div class="date">{{new Date() | moment('LLLL') }}</div>
+          <!-- <div class="date">{{new Date() | moment('LLLL') }}</div> -->
         </div>
         <div class="weather-box">
           <div class="temp">{{Math.round(weather.main.temp)}}°c</div>
@@ -31,38 +31,23 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
+
 export default {
   name: "app",
   data() {
     return {
       noLocation: true,
-      api_key: "7581af8da7499cff0f7014b04ceb3cab",
-      url_base: "https://api.openweathermap.org/data/2.5/",
-      query: "",
-      weather: {},
-      fetches: {
-        cityname: query =>
-          fetch(
-            `${this.url_base}weather?q=${query}&units=metric&APPID=${this.api_key}`
-          ),
-        coordinates: ({ lat, lng }) =>
-          fetch(
-            `${this.url_base}weather?lat=${lat}&lon=${lng}&units=metric&APPID=${this.api_key}`
-          )
-      }
+      query: ""
     };
   },
   beforeMount() {
-    this.fetchByCoordinates();
+    //this.fetchByCoordinates();
   },
   methods: {
-    fetchWeather(method, ...args) {
-      this.fetches[method](...args)
-        .then(res => res.json())
-        .then(this.setResults);
-    },
     fetchByCityName() {
-        this.fetchWeather("cityname", this.query);
+      this.$store.dispatch("fetchWeather", "cityname", this.query);
+      //this.fetchWeather("cityname", this.query);
     },
     async fetchByCoordinates() {
       try {
@@ -74,9 +59,11 @@ export default {
       }
     },
     setResults(results) {
+      console.log(results);
       this.weather = results;
     }
-  }
+  },
+  computed: mapGetters(["weather"])
 };
 </script>
 
